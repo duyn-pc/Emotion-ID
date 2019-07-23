@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-The model is the mini-Xception architecture from Octavio Arriaga et al. 
+This model is the mini-Xception architecture from Octavio Arriaga et al. 
 https://github.com/oarriaga/face_classification
 """
 from pathlib import Path
 
+from keras.callbacks import CSVLogger, ModelCheckpoint, EarlyStopping
+from keras.callbacks import ReduceLROnPlateau
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Activation, Conv2D
 from keras.layers import BatchNormalization
 from keras.layers import GlobalAveragePooling2D
-from keras.models import Sequential
 from keras.layers import MaxPooling2D
 from keras.layers import SeparableConv2D
+from keras.models import Sequential
 from keras.regularizers import l2
 import numpy as np
 
@@ -19,12 +21,13 @@ import utils
 
 # Parameters
 batch_size = 32
-num_epochs = 10
+num_epochs = 100
 num_classes = 7
+wait_time = 50
 regularization = l2(0.01)
 data_folder = Path('data/fer2013.csv')
 
-# Will try loading saved numpy arrays from directory, if available. 
+# Loads saved numpy arrays if available. Otherwise creates it with load_data. 
 try:
     X_train = np.load(Path('data/X_train.npy'))
     Y_train = np.load(Path('data/Y_train.npy'))
@@ -32,8 +35,7 @@ try:
     Y_val = np.load(Path('data/Y_val.npy'))
     X_test = np.load(Path('data/X_test.npy'))
     Y_test = np.load(Path('data/Y_test.npy'))    
-    print('Numpy data loaded.')
-    
+    print('Numpy data loaded.')   
 except:  
     print('Preparing data...')
     emotions = ['Angry', 'Disgust', 'Fear', 'Happy',
@@ -125,10 +127,30 @@ model.add(Conv2D(num_classes, (3, 3), padding='same'))
 model.add(GlobalAveragePooling2D())
 model.add(Activation('softmax', name='predictions'))
 
-# Optimizer
+# Loading saved models, if any
+try:
+    model.load_weights(Path('models/model.best.hdf5'))
+    print('Loading saved model...')
+except:
+    print('No saved models detected...')
+
+# Optimizers    
 model.compile(optimizer='adam', 
               loss='categorical_crossentropy', 
               metrics=['accuracy'])
+
+# Callbacks
+log_path = Path('logs/model_log.log')
+reduce_lr = ReduceLROnPlateau('val_loss', factor=0.1, 
+                              wait_time=int(wait_time/4), verbose=1)
+model_names = 'model.best.hdf5'
+model_path = 'models\\' + model_names # Windows environment
+#model_path= 'models/' + model_names   # Non-Windows environment
+checkpoint = ModelCheckpoint(model_path, 'val_loss', save_best_only=True)
+callback_list = [checkpoint, 
+                 CSVLogger(log_path, append=False),
+                 EarlyStopping('val_loss', patience=wait_time),
+                 reduce_lr]
 
 # Start the training
 print('Training the model...')
@@ -136,7 +158,8 @@ model.fit_generator(datagen.flow(X_train, Y_train, batch_size),
                     steps_per_epoch=len(X_train) / batch_size,
                     epochs=num_epochs, 
                     verbose=1,
-                    validation_data=(X_val, Y_val),
+                    validation_data=(X_val, Y_val), 
+                    callbacks=callback_list,
                     validation_steps=len(X_val) / batch_size)
 
 
