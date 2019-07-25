@@ -42,7 +42,10 @@ def load_data(classes, filepath, usage='Training', debug=False):
     X = np.array(X)
     X = X.reshape(X.shape[0], 48, 48, 1)
     X = X.astype("float32")
+    # Rescales the images
     X /= 255
+    X -= 0.5
+    X *= 2.0
     
     # Creates an array of "emotion" label for each input
     Y = data.emotion.values
