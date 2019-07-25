@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Testing other architectures
+"""Loads images from the FER2013 dataset as numpy arrays and trains it using a 
+residual neural network.
 
-This model is the mini-Xception architecture from Octavio Arriaga et al. 
+The architecture is the mini-Xception model from Octavio Arriaga et al. 
 https://github.com/oarriaga/face_classification
 """
 from pathlib import Path
