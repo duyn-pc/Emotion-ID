@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-      name='Emotion ID',
-      version='0.3',
+      name='Expression ID',
+      version='1.0',
       description='Deep learning project to classify facial expresssions.',
       url='https://github.com/duyn-pc',
       author='Duy Nguyen',
