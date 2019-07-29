@@ -32,7 +32,7 @@ regularization = l2(0.01)
 data_folder = Path('data/fer2013.csv')
 
 # Fine tuning Model, only do with already trained models
-fine_tune = False
+fine_tune = True
 
 # Loads saved numpy arrays if available. Otherwise creates it with load_data. 
 try:
@@ -178,8 +178,7 @@ log_path = Path('logs/model_log.log')
 reduce_lr = ReduceLROnPlateau('val_loss', factor=0.1, 
                               wait_time=int(wait_time/4), verbose=1)
 model_names = 'model.best.hdf5'
-model_path = 'models\\' + model_names # Windows environment
-#model_path= 'models/' + model_names   # Non-Windows environment
+model_path = str(Path('models/' + model_names))
 checkpoint = ModelCheckpoint(model_path, 'val_loss', save_best_only=True)
 callback_list = [checkpoint, 
                  CSVLogger(log_path, append=False),
@@ -195,39 +194,3 @@ model.fit_generator(datagen.flow(X_train, Y_train, batch_size),
                     validation_data=(X_val, Y_val), 
                     callbacks=callback_list,
                     validation_steps=len(X_val) / batch_size)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
